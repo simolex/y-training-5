@@ -41,7 +41,9 @@ function calculateMaxHeight(impulses) {
     const positiveSteps = [];
     const negativeSteps = [];
     let maxStep = 0;
-    let maxDelta = impulses[0][0] - impulses[0][1];
+    let minDelta = impulses[0][0] - impulses[0][1];
+    let flag = minDelta < 0;
+    let maxResult = 0;
 
     const sortSteps = (index) => {
         const delta = impulses[index][0] - impulses[index][1];
@@ -54,17 +56,31 @@ function calculateMaxHeight(impulses) {
     };
 
     for (let i = 1; i < impulses.length; i++) {
-        if (maxDelta < 0 || maxDelta + impulses[i][0] >= impulses[i][0] - impulses[i][1] + impulses[maxStep][0]) {
+        const newDelta = impulses[i][0] - impulses[i][1];
+        if (
+            // (flag && newDelta >= 0) ||
+            (impulses[i][0] + minDelta > impulses[maxStep][0] && newDelta < 0) ||
+            (impulses[i][0] + minDelta > impulses[maxStep][0] + newDelta && newDelta >= 0)
+        ) {
             sortSteps(maxStep);
             maxStep = i;
-            maxDelta = impulses[i][0] - impulses[i][1];
+            minDelta = newDelta;
+            flag = false;
         } else {
             sortSteps(i);
         }
     }
+    console.log(positiveSteps);
+    console.log(negativeSteps);
+
+    if (impulses[maxStep][0] - impulses[maxStep][1] < 0) {
+        // maxResult = impulses[positiveSteps[positiveSteps.length - 1] - 1][0];
+    } else {
+        maxResult = impulses[maxStep][0];
+    }
     positiveSteps.push(maxStep + 1);
 
-    return [longPath + impulses[maxStep][0], positiveSteps.concat(negativeSteps)];
+    return [longPath + maxResult, positiveSteps.concat(negativeSteps)];
 }
 
 const _readline = require("readline");
