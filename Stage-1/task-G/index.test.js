@@ -1,6 +1,6 @@
 const solution = require(".");
 
-describe("F. Колесо Фортуны", () => {
+describe("G. Ни больше ни меньше", () => {
     test("test-1", () => {
         const result = solution([
             [1, 3, 3, 3, 2],
