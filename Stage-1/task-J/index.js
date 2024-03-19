@@ -51,7 +51,7 @@ function validPicture(n, m, picture) {
         }
         return [
             [rect[0], rect[1]],
-            [rect[2], rect[3]],
+            [rect[2], rect[3]]
         ];
     };
 
@@ -95,7 +95,7 @@ function validPicture(n, m, picture) {
         [".", ".", "#", "."],
         [
             [".", ".", ".", "."],
-            [".", "#", ".", "."],
+            [".", "#", ".", "."]
         ],
         ["", "", "", ""],
         [".", "#", "#", "."],
@@ -103,15 +103,15 @@ function validPicture(n, m, picture) {
             (startPoint, endPoint) => testEdgeI(startPoint[1], endPoint[1], startPoint[0] + dI[0]),
             (startPoint, endPoint) => testEdgeJ(startPoint[0], endPoint[0], endPoint[1] + dJ[1]),
             (startPoint, endPoint) => testEdgeI(startPoint[1], endPoint[1], endPoint[0] + dI[2]),
-            (startPoint, endPoint) => testEdgeJ(startPoint[0], endPoint[0], startPoint[1] + dJ[3]),
-        ],
+            (startPoint, endPoint) => testEdgeJ(startPoint[0], endPoint[0], startPoint[1] + dJ[3])
+        ]
     ];
     const rightTopHolePattern = [
         ["", "", "", ""],
         ["", "", "", ""],
         [
             [".", ".", ".", "."],
-            [".", ".", ".", "#"],
+            [".", ".", ".", "#"]
         ],
         [".", ".", "#", "."],
         [".", ".", "#", "#"],
@@ -119,13 +119,13 @@ function validPicture(n, m, picture) {
             (startPoint, endPoint) => testEdgeI(endPoint[1], startPoint[1], startPoint[0] + dI[0]),
             (startPoint, endPoint) => testEdgeJ(startPoint[0], endPoint[0], startPoint[1] + dJ[1]),
             (startPoint, endPoint) => testEdgeI(endPoint[1], startPoint[1], endPoint[0] + dI[2]),
-            (startPoint, endPoint) => testEdgeJ(startPoint[0], endPoint[0], endPoint[1] + dJ[3]),
-        ],
+            (startPoint, endPoint) => testEdgeJ(startPoint[0], endPoint[0], endPoint[1] + dJ[3])
+        ]
     ];
     const rightBottomHolePattern = [
         [
             [".", ".", ".", "."],
-            [".", ".", ".", "#"],
+            [".", ".", ".", "#"]
         ],
         ["", "", "", ""],
         ["", "", "", ""],
@@ -135,13 +135,13 @@ function validPicture(n, m, picture) {
             (startPoint, endPoint) => testEdgeI(endPoint[1], startPoint[1], endPoint[0] + dI[0]),
             (startPoint, endPoint) => testEdgeJ(endPoint[0], startPoint[0], startPoint[1] + dJ[1]),
             (startPoint, endPoint) => testEdgeI(endPoint[1], startPoint[1], startPoint[0] + dI[2]),
-            (startPoint, endPoint) => testEdgeJ(endPoint[0], startPoint[0], endPoint[1] + dJ[3]),
-        ],
+            (startPoint, endPoint) => testEdgeJ(endPoint[0], startPoint[0], endPoint[1] + dJ[3])
+        ]
     ];
     const leftBottomHolePattern = [
         [
             [".", ".", ".", "."],
-            [".", "#", ".", "."],
+            [".", "#", ".", "."]
         ],
         ["#", ".", ".", "."],
         ["", "", "", ""],
@@ -151,8 +151,8 @@ function validPicture(n, m, picture) {
             (startPoint, endPoint) => testEdgeI(startPoint[1], endPoint[1], endPoint[0] + dI[0]),
             (startPoint, endPoint) => testEdgeJ(endPoint[0], startPoint[0], endPoint[1] + dJ[1]),
             (startPoint, endPoint) => testEdgeI(startPoint[1], endPoint[1], startPoint[0] + dI[2]),
-            (startPoint, endPoint) => testEdgeJ(endPoint[0], startPoint[0], startPoint[1] + dJ[3]),
-        ],
+            (startPoint, endPoint) => testEdgeJ(endPoint[0], startPoint[0], startPoint[1] + dJ[3])
+        ]
     ];
 
     const getVertexHole = (curPos, pattern) => {
@@ -194,113 +194,154 @@ function validPicture(n, m, picture) {
     //Основная часть
     const leftTopHoleAngel = getVertexHole([topLeft[0], topLeft[1]], leftTopHolePattern);
     const rightTopHoleAngel = getVertexHole([topLeft[0], bottomRight[1]], rightTopHolePattern);
-    const rightBottomHoleAngel = getVertexHole(
-        [bottomRight[0], bottomRight[1]],
-        rightBottomHolePattern
-    );
+    const rightBottomHoleAngel = getVertexHole([bottomRight[0], bottomRight[1]], rightBottomHolePattern);
     const leftBottomHoleAngel = getVertexHole([bottomRight[0], topLeft[1]], leftBottomHolePattern);
 
     const existHoleAngel = (result) => (result[0] === -1 ? 0 : 1);
 
-    const testAndPaintingRect = (topLeftPoint, bottomRightPoint, marker) => {
+    const testingRect = (topLeftPoint, bottomRightPoint) => {
         let isRect = true;
-        const [topLeftPointNew, bottomRightPointNew] = minimalPaintedRect(
-            topLeftPoint,
-            bottomRightPoint
-        );
+
+        const [topLeftPointNew, bottomRightPointNew] = minimalPaintedRect(topLeftPoint, bottomRightPoint);
 
         for (let i = topLeftPointNew[0]; i <= bottomRightPointNew[0] && isRect; i++) {
             for (let j = topLeftPointNew[1]; j <= bottomRightPointNew[1] && isRect; j++) {
                 isRect = isRect && pixelPicture[i][j] === "#";
-                pixelPicture[i][j] = marker;
             }
         }
         return isRect;
     };
 
-    const paintingRectWithOneHole = (topLeftPoint, bottomRightPoint, marker) => {
-        return testAndPaintingRect(topLeftPoint, bottomRightPoint, marker);
+    const paintingRect = (topLeftPoint, bottomRightPoint, marker) => {
+        const [topLeftPointNew, bottomRightPointNew] = minimalPaintedRect(topLeftPoint, bottomRightPoint);
+
+        for (let i = topLeftPointNew[0]; i <= bottomRightPointNew[0]; i++) {
+            for (let j = topLeftPointNew[1]; j <= bottomRightPointNew[1]; j++) {
+                pixelPicture[i][j] = marker;
+            }
+        }
     };
 
-    const returnResult = () => pixelPicture.slice(1, -1).map((line) => line.slice(1, -1).join(""));
+    const paintingRectWithOneHole = (topLeftPoint, bottomRightPoint, marker) => {
+        if (testingRect(topLeftPoint, bottomRightPoint)) {
+            paintingRect(topLeftPoint, bottomRightPoint, marker);
+            return true;
+        }
+        return false;
+    };
+
+    const returnResult = () => {
+        const result = pixelPicture.slice(1, -1).map((line) => line.slice(1, -1).join(""));
+        const isFail = result.reduce((test, line) => test || line.includes("#"), false);
+        return isFail ? [] : result;
+    };
 
     const countHoleAngel =
         existHoleAngel(leftTopHoleAngel) +
         existHoleAngel(rightTopHoleAngel) +
         existHoleAngel(rightBottomHoleAngel) +
         existHoleAngel(leftBottomHoleAngel);
-    console.log(pixelPicture);
-    console.log(countHoleAngel);
 
     if (countHoleAngel == 0) {
-        for (let i = topLeft[0]; i <= bottomRight[0]; i++) {
-            for (let j = topLeft[1]; j <= bottomRight[1]; j++) {
-                if (width == 1) {
-                    if (i === topLeft[0]) {
-                        pixelPicture[i][j] = "a";
+        if (testingRect(topLeft, bottomRight)) {
+            for (let i = topLeft[0]; i <= bottomRight[0]; i++) {
+                for (let j = topLeft[1]; j <= bottomRight[1]; j++) {
+                    if (width == 1) {
+                        if (i === topLeft[0]) {
+                            pixelPicture[i][j] = "a";
+                        } else {
+                            pixelPicture[i][j] = "b";
+                        }
                     } else {
-                        pixelPicture[i][j] = "b";
-                    }
-                } else {
-                    if (j === topLeft[1]) {
-                        pixelPicture[i][j] = "a";
-                    } else {
-                        pixelPicture[i][j] = "b";
+                        if (j === topLeft[1]) {
+                            pixelPicture[i][j] = "a";
+                        } else {
+                            pixelPicture[i][j] = "b";
+                        }
                     }
                 }
             }
+        } else {
+            let isRect = true;
+            let i;
+            for (i = topLeft[0]; i <= bottomRight[0]; i++) {
+                if (pixelPicture[i][topLeft[1]] !== "#") {
+                }
+            }
         }
-        return returnResult();
     } else if (countHoleAngel == 1) {
         if (existHoleAngel(leftTopHoleAngel) == 1) {
             if (
-                paintingRectWithOneHole(
-                    [topLeft[0], leftTopHoleAngel[1] + 1],
-                    [leftTopHoleAngel[0], bottomRight[1]],
-                    "a"
-                ) &&
-                paintingRectWithOneHole([leftTopHoleAngel[0] + 1, topLeft[1]], bottomRight, "b")
+                testingRect([topLeft[0], leftTopHoleAngel[1] + 1], [leftTopHoleAngel[0], bottomRight[1]]) &&
+                testingRect([leftTopHoleAngel[0] + 1, topLeft[1]], bottomRight)
             ) {
+                paintingRect([topLeft[0], leftTopHoleAngel[1] + 1], [leftTopHoleAngel[0], bottomRight[1]], "a");
+                paintingRect([leftTopHoleAngel[0] + 1, topLeft[1]], bottomRight, "b");
+                return returnResult();
+            } else if (
+                testingRect([topLeft[0], leftTopHoleAngel[1] + 1], bottomRight) &&
+                testingRect([leftTopHoleAngel[0] + 1, topLeft[1]], [leftTopHoleAngel[0], bottomRight[1]])
+            ) {
+                paintingRect([topLeft[0], leftTopHoleAngel[1] + 1], bottomRight, "a");
+                paintingRect([leftTopHoleAngel[0] + 1, topLeft[1]], [leftTopHoleAngel[0], bottomRight[1]], "b");
                 return returnResult();
             }
         } else if (existHoleAngel(rightTopHoleAngel) == 1) {
             if (
-                paintingRectWithOneHole(
-                    topLeft,
-                    [rightTopHoleAngel[0], rightTopHoleAngel[1] - 1],
-                    "a"
-                ) &&
-                paintingRectWithOneHole([rightTopHoleAngel[0] + 1, topLeft[1]], bottomRight, "b")
+                testingRect(topLeft, [rightTopHoleAngel[0], rightTopHoleAngel[1] - 1]) &&
+                testingRect([rightTopHoleAngel[0] + 1, topLeft[1]], bottomRight)
             ) {
+                paintingRect(topLeft, [rightTopHoleAngel[0], rightTopHoleAngel[1] - 1], "a");
+                paintingRect([rightTopHoleAngel[0] + 1, topLeft[1]], bottomRight, "b");
+                return returnResult();
+            } else if (
+                testingRect(topLeft, [bottomRight[0], rightTopHoleAngel[1] - 1]) &&
+                testingRect([rightTopHoleAngel[0] + 1, rightTopHoleAngel[1]], bottomRight)
+            ) {
+                paintingRect(topLeft, [bottomRight[0], rightTopHoleAngel[1] - 1], "a");
+                paintingRect([rightTopHoleAngel[0] + 1, rightTopHoleAngel[1]], bottomRight, "b");
                 return returnResult();
             }
         } else if (existHoleAngel(rightBottomHoleAngel) == 1) {
             if (
-                paintingRectWithOneHole(
-                    topLeft,
-                    [rightBottomHoleAngel[0] - 1, bottomRight[1]],
-                    "a"
-                ) &&
-                paintingRectWithOneHole(
-                    [rightBottomHoleAngel[0], topLeft[1]],
-                    [bottomRight[0], rightBottomHoleAngel[1] - 1],
-                    "b"
-                )
+                testingRect(topLeft, [rightBottomHoleAngel[0] - 1, bottomRight[1]]) &&
+                testingRect([rightBottomHoleAngel[0], topLeft[1]], [bottomRight[0], rightBottomHoleAngel[1] - 1])
             ) {
+                paintingRect(topLeft, [rightBottomHoleAngel[0] - 1, bottomRight[1]], "a");
+                paintingRect([rightBottomHoleAngel[0], topLeft[1]], [bottomRight[0], rightBottomHoleAngel[1] - 1], "b");
+                return returnResult();
+            } else if (
+                testingRect(topLeft, [bottomRight[0], rightBottomHoleAngel[1] - 1]) &&
+                testingRect([topLeft[0], rightBottomHoleAngel[1]], [(rightBottomHoleAngel[0] - 1, bottomRight[1])])
+            ) {
+                paintingRect(topLeft, [bottomRight[0], rightBottomHoleAngel[1] - 1], "a");
+                paintingRect(
+                    [topLeft[0], rightBottomHoleAngel[1]],
+                    [(rightBottomHoleAngel[0] - 1, bottomRight[1])],
+                    "b"
+                );
                 return returnResult();
             }
         } else if (existHoleAngel(leftBottomHoleAngel) == 1) {
             if (
-                paintingRectWithOneHole(
-                    topLeft,
-                    [leftBottomHoleAngel[0] - 1, bottomRight[1]],
-                    "a"
-                ) &&
-                paintingRectWithOneHole(
-                    [leftBottomHoleAngel[0], leftBottomHoleAngel[1] + 1],
-                    bottomRight,
-                    "b"
-                )
+                testingRect(topLeft, [leftBottomHoleAngel[0] - 1, bottomRight[1]]) &&
+                testingRect([leftBottomHoleAngel[0], leftBottomHoleAngel[1] + 1], bottomRight)
+            ) {
+                paintingRect(topLeft, [leftBottomHoleAngel[0] - 1, bottomRight[1]], "a");
+                paintingRect([leftBottomHoleAngel[0], leftBottomHoleAngel[1] + 1], bottomRight, "b");
+                return returnResult();
+            } else if (
+                testingRect(topLeft, [leftBottomHoleAngel[0] - 1, leftBottomHoleAngel[1]]) &&
+                testingRect([topLeft[0], leftBottomHoleAngel[1] + 1], bottomRight)
+            ) {
+                paintingRect(topLeft, [leftBottomHoleAngel[0] - 1, leftBottomHoleAngel[1]], "a");
+                paintingRect([topLeft[0], leftBottomHoleAngel[1] + 1], bottomRight, "b");
+                return returnResult();
+            }
+
+            if (
+                paintingRectWithOneHole(topLeft, [leftBottomHoleAngel[0] - 1, bottomRight[1]], "a") &&
+                paintingRectWithOneHole([leftBottomHoleAngel[0], leftBottomHoleAngel[1] + 1], bottomRight, "b")
             ) {
                 return returnResult();
             }
@@ -318,12 +359,10 @@ function validPicture(n, m, picture) {
             ) {
                 return returnResult();
             }
-        } else if (
-            existHoleAngel(leftTopHoleAngel) == 1 &&
-            existHoleAngel(rightBottomHoleAngel) == 1
-        ) {
+        } else if (existHoleAngel(leftTopHoleAngel) == 1 && existHoleAngel(rightBottomHoleAngel) == 1) {
             if (
-                rightBottomHoleAngel[0] - leftTopHoleAngel[0] >= 0 &&
+                rightBottomHoleAngel[0] - leftTopHoleAngel[0] <= 1 &&
+                rightBottomHoleAngel[1] - leftTopHoleAngel[1] > 0 &&
                 paintingRectWithOneHole(
                     [topLeft[0], leftTopHoleAngel[1] + 1],
                     [leftTopHoleAngel[0], bottomRight[1]],
@@ -337,7 +376,8 @@ function validPicture(n, m, picture) {
             ) {
                 return returnResult();
             } else if (
-                rightBottomHoleAngel[1] - leftTopHoleAngel[1] >= 0 &&
+                rightBottomHoleAngel[0] - leftTopHoleAngel[0] > 0 &&
+                rightBottomHoleAngel[1] - leftTopHoleAngel[1] <= 1 &&
                 paintingRectWithOneHole(
                     [leftTopHoleAngel[0] + 1, topLeft[1]],
                     [bottomRight[0], leftTopHoleAngel[1]],
@@ -351,8 +391,8 @@ function validPicture(n, m, picture) {
             ) {
                 return returnResult();
             } else if (
-                rightBottomHoleAngel[0] - leftTopHoleAngel[0] < 0 &&
-                rightBottomHoleAngel[1] - leftTopHoleAngel[1] < 0 &&
+                rightBottomHoleAngel[0] - leftTopHoleAngel[0] <= 1 &&
+                rightBottomHoleAngel[1] - leftTopHoleAngel[1] <= 1 &&
                 paintingRectWithOneHole(
                     [topLeft[0], leftTopHoleAngel[1] + 1],
                     [rightBottomHoleAngel[0] - 1, bottomRight[1]],
@@ -366,10 +406,7 @@ function validPicture(n, m, picture) {
             ) {
                 return returnResult();
             }
-        } else if (
-            existHoleAngel(leftTopHoleAngel) == 1 &&
-            existHoleAngel(leftBottomHoleAngel) == 1
-        ) {
+        } else if (existHoleAngel(leftTopHoleAngel) == 1 && existHoleAngel(leftBottomHoleAngel) == 1) {
             if (
                 leftTopHoleAngel[1] === leftBottomHoleAngel[1] &&
                 paintingRectWithOneHole(
@@ -381,10 +418,7 @@ function validPicture(n, m, picture) {
             ) {
                 return returnResult();
             }
-        } else if (
-            existHoleAngel(rightTopHoleAngel) == 1 &&
-            existHoleAngel(rightBottomHoleAngel) == 1
-        ) {
+        } else if (existHoleAngel(rightTopHoleAngel) == 1 && existHoleAngel(rightBottomHoleAngel) == 1) {
             if (
                 rightTopHoleAngel[1] === rightBottomHoleAngel[1] &&
                 paintingRectWithOneHole(topLeft, [bottomRight[0], rightTopHoleAngel[1] - 1], "a") &&
@@ -396,65 +430,33 @@ function validPicture(n, m, picture) {
             ) {
                 return returnResult();
             }
-        } else if (
-            existHoleAngel(rightTopHoleAngel) == 1 &&
-            existHoleAngel(leftBottomHoleAngel) == 1
-        ) {
+        } else if (existHoleAngel(rightTopHoleAngel) == 1 && existHoleAngel(leftBottomHoleAngel) == 1) {
             if (
-                leftBottomHoleAngel[0] - rightTopHoleAngel[0] >= 0 &&
-                paintingRectWithOneHole(
-                    topLeft,
-                    [rightTopHoleAngel[0], rightTopHoleAngel[1] - 1],
-                    "a"
-                ) &&
-                paintingRectWithOneHole(
-                    [leftBottomHoleAngel[0], leftBottomHoleAngel[1] + 1],
-                    bottomRight,
-                    "b"
-                )
+                leftBottomHoleAngel[0] - rightTopHoleAngel[0] <= 1 &&
+                rightTopHoleAngel[1] - leftBottomHoleAngel[1] > 0 &&
+                paintingRectWithOneHole(topLeft, [rightTopHoleAngel[0], rightTopHoleAngel[1] - 1], "a") &&
+                paintingRectWithOneHole([leftBottomHoleAngel[0], leftBottomHoleAngel[1] + 1], bottomRight, "b")
             ) {
                 return returnResult();
             } else if (
-                rightTopHoleAngel[1] - leftBottomHoleAngel[1] >= 0 &&
-                paintingRectWithOneHole(
-                    topLeft,
-                    [leftBottomHoleAngel[0] - 1, rightTopHoleAngel[1] - 1],
-                    "a"
-                ) &&
-                paintingRectWithOneHole(
-                    [rightTopHoleAngel[0] + 1, leftBottomHoleAngel[1] + 1],
-                    bottomRight,
-                    "b"
-                )
+                leftBottomHoleAngel[0] - rightTopHoleAngel[0] > 0 &&
+                rightTopHoleAngel[1] - leftBottomHoleAngel[1] <= 1 &&
+                paintingRectWithOneHole(topLeft, [leftBottomHoleAngel[0] - 1, rightTopHoleAngel[1] - 1], "a") &&
+                paintingRectWithOneHole([rightTopHoleAngel[0] + 1, leftBottomHoleAngel[1] + 1], bottomRight, "b")
             ) {
                 return returnResult();
             } else if (
-                leftBottomHoleAngel[0] - rightTopHoleAngel[0] < 0 &&
-                rightTopHoleAngel[1] - leftBottomHoleAngel[1] < 0 &&
-                paintingRectWithOneHole(
-                    topLeft,
-                    [leftBottomHoleAngel[0] - 1, rightTopHoleAngel[1] - 1],
-                    "a"
-                ) &&
-                paintingRectWithOneHole(
-                    [rightTopHoleAngel[0] + 1, leftBottomHoleAngel[1] + 1],
-                    bottomRight,
-                    "b"
-                )
+                leftBottomHoleAngel[0] - rightTopHoleAngel[0] <= 1 &&
+                rightTopHoleAngel[1] - leftBottomHoleAngel[1] <= 1 &&
+                paintingRectWithOneHole(topLeft, [leftBottomHoleAngel[0] - 1, rightTopHoleAngel[1] - 1], "a") &&
+                paintingRectWithOneHole([rightTopHoleAngel[0] + 1, leftBottomHoleAngel[1] + 1], bottomRight, "b")
             ) {
                 return returnResult();
             }
-        } else if (
-            existHoleAngel(rightBottomHoleAngel) == 1 &&
-            existHoleAngel(leftBottomHoleAngel) == 1
-        ) {
+        } else if (existHoleAngel(rightBottomHoleAngel) == 1 && existHoleAngel(leftBottomHoleAngel) == 1) {
             if (
                 leftBottomHoleAngel[0] === rightBottomHoleAngel[0] &&
-                paintingRectWithOneHole(
-                    topLeft,
-                    [leftBottomHoleAngel[0] - 1, bottomRight[1]],
-                    "a"
-                ) &&
+                paintingRectWithOneHole(topLeft, [leftBottomHoleAngel[0] - 1, bottomRight[1]], "a") &&
                 paintingRectWithOneHole(
                     [leftBottomHoleAngel[0], leftBottomHoleAngel[1] + 1],
                     [bottomRight[0], rightBottomHoleAngel[1] - 1],
@@ -471,7 +473,7 @@ function validPicture(n, m, picture) {
 const _readline = require("readline");
 
 const _reader = _readline.createInterface({
-    input: process.stdin,
+    input: process.stdin
 });
 
 const _inputLines = [];
