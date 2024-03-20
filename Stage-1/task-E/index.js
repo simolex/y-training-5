@@ -37,41 +37,66 @@
  */
 
 function calculateMaxHeight(impulses) {
-    let longPath = 0;
     const positiveSteps = [];
     const negativeSteps = [];
-    let maxStep = 0;
-    let minDelta = impulses[0][0] - impulses[0][1];
-    let flag = minDelta < 0;
-    let maxResult = 0;
+
+    let indexMaxNegative = -1;
+    let indexMaxNegativeRelative = -1;
+    let lengthPositivePath = 0;
 
     const sortSteps = (index) => {
         const delta = impulses[index][0] - impulses[index][1];
         if (delta < 0) {
-            negativeSteps.push(index + 1);
+            if (indexMaxNegative < 0 || impulses[indexMaxNegative][0] < impulses[index][0]) {
+                indexMaxNegative = index;
+                indexMaxNegativeRelative = negativeSteps.length;
+            }
+            negativeSteps.push(index);
         } else {
-            positiveSteps.push(index + 1);
-            longPath += delta;
+            lengthPositivePath += delta;
+            positiveSteps.push(index);
         }
     };
 
-    for (let i = 1; i < impulses.length; i++) {
-        const newDelta = impulses[i][0] - impulses[i][1];
+    for (let i = 0; i < impulses.length; i++) {
+        sortSteps(i);
+    }
+
+    let indexMaxPositiveImpulse = -1;
+    let maxPositivePath = 0;
+    let negativeImpulse;
+
+    for (let i = 0; i < positiveSteps.length; i++) {
+        const curImpulse = positiveSteps[i];
+        const delta = impulses[curImpulse][0] - impulses[curImpulse][1];
         if (
-            // (flag && newDelta >= 0) ||
-            (impulses[i][0] + minDelta > impulses[maxStep][0] && newDelta < 0) ||
-            (impulses[i][0] + minDelta > impulses[maxStep][0] + newDelta && newDelta >= 0)
+            indexMaxPositiveImpulse < 0 ||
+            maxPositivePath < lengthPositivePath - delta + impulses[curImpulse][0]
         ) {
-            sortSteps(maxStep);
-            maxStep = i;
-            minDelta = newDelta;
-            flag = false;
-        } else {
-            sortSteps(i);
+            indexMaxPositiveImpulse = i;
+            maxPositivePath = lengthPositivePath - delta + impulses[curImpulse][0];
         }
     }
-    console.log(positiveSteps);
-    console.log(negativeSteps);
+
+    if (
+        negativeSteps.length > 0 &&
+        maxPositivePath < lengthPositivePath + impulses[indexMaxNegative][0]
+    ) {
+        negativeImpulse = impulses[indexMaxNegative][0];
+        maxPositivePath = lengthPositivePath + negativeImpulse;
+        indexMaxPositiveImpulse = -1;
+    }
+
+    if (indexMaxPositiveImpulse < 0) {
+        negativeSteps.splice(indexMaxNegativeRelative, 1);
+        negativeSteps.unshift(indexMaxNegative);
+    } else if (indexMaxPositiveImpulse + 1 < positiveSteps.length) {
+        const index = positiveSteps[indexMaxPositiveImpulse];
+        positiveSteps.splice(indexMaxPositiveImpulse, 1);
+        positiveSteps.push(index);
+    }
+
+    return [maxPositivePath, positiveSteps.concat(negativeSteps).map((v) => v + 1)];
 
     if (impulses[maxStep][0] - impulses[maxStep][1] < 0) {
         // maxResult = impulses[positiveSteps[positiveSteps.length - 1] - 1][0];
@@ -86,7 +111,7 @@ function calculateMaxHeight(impulses) {
 const _readline = require("readline");
 
 const _reader = _readline.createInterface({
-    input: process.stdin
+    input: process.stdin,
 });
 
 const _inputLines = [];
