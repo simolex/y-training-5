@@ -24,65 +24,43 @@
  */
 
 function bestDeny(heroRate) {
-    const result1 = [];
     const n = heroRate.length;
     const m = heroRate[0].length;
 
-    const maxByRows = [];
-    const maxByColumns = [];
+    const getMaxPower = (lockRow = -1, lockColumn = -1) => {
+        let maxI, maxJ;
+        let maxValue = -1;
 
-    for (let i = 0; i < n; i++) {
-        maxByRows[i] = { value: heroRate[i][0], index: i, indexT: 0 };
-    }
-
-    const checkAndSetMax = (holder, index, indexT, current) => {
-        if (holder[index].value < current) {
-            holder[index] = { value: current, index, indexT };
-        }
-    };
-
-    for (let i = 0; i < n; i++) {
-        for (let j = 0; j < m; j++) {
-            checkAndSetMax(maxByRows, i, j, heroRate[i][j]);
-        }
-    }
-
-    let maxRow = maxByRows[0];
-    for (let i = 1; i < n; i++) {
-        if (maxRow.value < maxByRows[i].value) {
-            maxRow = maxByRows[i];
-        }
-    }
-    result1.push(maxRow.index + 1);
-
-    let initRow = maxRow.index === 0 ? 1 : 0;
-    for (let j = 0; j < m; j++) {
-        maxByColumns[j] = { value: heroRate[initRow][j], index: j, indexT: initRow };
-    }
-
-    for (let i = 0; i < n; i++) {
-        if (i !== maxRow.index) {
+        for (let i = 0; i < n; i++) {
             for (let j = 0; j < m; j++) {
-                checkAndSetMax(maxByColumns, j, i, heroRate[i][j]);
+                if (i === lockRow || j === lockColumn) {
+                    continue;
+                }
+                if (heroRate[i][j] > maxValue) {
+                    maxValue = heroRate[i][j];
+                    (maxI = i), (maxJ = j);
+                }
             }
         }
-    }
+        return [maxI, maxJ, maxValue];
+    };
 
-    let maxColumn = maxByColumns[0];
-    for (let j = 1; j < m; j++) {
-        if (maxColumn.value < maxByColumns[j].value) {
-            maxColumn = maxByColumns[j];
-        }
-    }
-    result1.push(maxColumn.index + 1);
+    const [zeroMaxRow, zeroMaxColumn] = getMaxPower();
+    const [_1, nextMaxColumn] = getMaxPower(zeroMaxRow);
+    const [nextMaxRow, _2] = getMaxPower(-1, zeroMaxColumn);
 
-    return result;
+    const [__01, _02, maxRestPower_1] = getMaxPower(zeroMaxRow, nextMaxColumn);
+    const [__11, _12, maxRestPower_2] = getMaxPower(nextMaxRow, zeroMaxColumn);
+
+    return maxRestPower_1 < maxRestPower_2
+        ? [zeroMaxRow + 1, nextMaxColumn + 1]
+        : [nextMaxRow + 1, zeroMaxColumn + 1];
 }
 
 const _readline = require("readline");
 
 const _reader = _readline.createInterface({
-    input: process.stdin
+    input: process.stdin,
 });
 
 const _inputLines = [];
