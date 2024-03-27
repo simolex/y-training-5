@@ -98,7 +98,8 @@ function protocol_P2P(n, k) {
         partsRating.unshift({});
     };
 
-    const getNextPart = (device) => {
+    const getNextPart = (device, n) => {
+        // const partOnDevice = new Set([...deviceWithParts[device].keys()].sort((a, b) => a - b));
         const partOnDevice = deviceWithParts[device];
         let noSelectTransmitter = true;
         let partCandidateIndex = 1;
@@ -111,25 +112,16 @@ function protocol_P2P(n, k) {
         }
 
         const listDevices = [...partsRating[partCandidateIndex].devices.values()];
-        listDevices.sort((a, b) => a - b);
-        // console.log(device, partCandidateIndex, listDevices);
+        listDevices.sort((a, b) => deviceWithParts[a].size - deviceWithParts[b].size || a - b);
 
-        let diviceTransmitter = -1;
-        let minCountPart = k;
-        for (const device of listDevices) {
-            if (diviceTransmitter === -1 || deviceWithParts[device].size < minCountPart) {
-                minCountPart = deviceWithParts[device].size;
-                diviceTransmitter = device;
-            }
-        }
-        return { part: partsRating[partCandidateIndex].part, trasmitter: diviceTransmitter };
+        return { part: partsRating[partCandidateIndex].part, trasmitter: listDevices[0] };
     };
 
-    const addRequest = (device, receiver, part) => {
-        if (!requests[device]) {
-            requests[device] = new Map();
+    const addRequest = (trasmitter, receiver, part) => {
+        if (!requests[trasmitter]) {
+            requests[trasmitter] = new Map();
         }
-        requests[device].set(receiver, part);
+        requests[trasmitter].set(receiver, part);
     };
 
     const addFavoriteRate = (receiver, transmitter) => {
@@ -144,7 +136,7 @@ function protocol_P2P(n, k) {
 
     const getFavoriteRate = (transmitter, receiver) => {
         if (!favorites.has(transmitter) || !favorites.get(transmitter).has(receiver)) {
-            return 0;
+            return { rate: 0 };
         }
 
         return favorites.get(transmitter).get(receiver);
@@ -163,17 +155,18 @@ function protocol_P2P(n, k) {
 
         deviceWithParts.forEach((d, i) => {
             if (i > 0 && d.size < k) {
-                const { part, trasmitter } = getNextPart(i);
+                const { part, trasmitter } = getNextPart(i, timeslot);
                 addRequest(trasmitter, i, part);
             }
         });
+
         const responce = requests.map((req, i) => {
             if (i > 0) {
                 const receivers = [...req.keys()];
 
                 receivers.sort(
                     (a, b) =>
-                        getFavoriteRate(i, b) - getFavoriteRate(i, a) ||
+                        getFavoriteRate(i, b).rate - getFavoriteRate(i, a).rate ||
                         deviceWithParts[a].size - deviceWithParts[b].size ||
                         a - b
                 );
@@ -187,23 +180,13 @@ function protocol_P2P(n, k) {
             }
         });
 
-        const transceiver = [];
         responce.forEach((res, i) => {
             addFavoriteRate(res.receiver, i);
             partByDevice[res.part].add(res.receiver);
             deviceWithParts[res.receiver].add(res.part);
             updateProgress++;
-            transceiver.push(`${i} => ${res.receiver} [${res.part}]`);
         });
-        console.log(`Timeslot ${timeslot}: ${transceiver.join(" ,")}`);
 
-        console.log("requests", requests);
-        console.log("responce", responce);
-        console.log("favorites", favorites);
-        console.log("partByDevice", partByDevice);
-        console.log("deviceWithParts", deviceWithParts);
-        console.log("timeProgress", timeProgress);
-        console.log("---");
         timeslot++;
     }
 
@@ -213,7 +196,7 @@ function protocol_P2P(n, k) {
 const _readline = require("readline");
 
 const _reader = _readline.createInterface({
-    input: process.stdin
+    input: process.stdin,
 });
 
 const _inputLines = [];
