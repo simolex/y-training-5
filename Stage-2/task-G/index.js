@@ -19,8 +19,8 @@
  */
 
 function findSquare(coords) {
-    const setByX = new Map();
-    const setByY = new Map();
+    const setByXY = new Map();
+    let result = [];
 
     const addNumber = (set, key, value) => {
         if (!set.has(key)) {
@@ -32,14 +32,57 @@ function findSquare(coords) {
     };
 
     coords.forEach(([x, y]) => {
-        addNumber(setByX, x, y);
-        addNumber(setByY, y, x);
+        addNumber(setByXY, x, y);
     });
+    coords.length = 0;
 
-    console.log(setByX);
-    console.log(setByY);
+    for (const [X, setByY] of setByXY.entries()) {
+        for (const Y of setByY.keys()) {
+            coords.push([X, Y]);
+        }
+    }
 
-    return [];
+    const findVertex = (p1, p2) => {
+        let noFinded = [];
+
+        const dX = p2[0] - p1[0];
+        const dY = p2[1] - p1[1];
+
+        const leftVertex = [];
+        leftVertex[0] = p1[0] - dY;
+        leftVertex[1] = p1[1] + dX;
+        if (!setByXY.has(leftVertex[0]) || !setByXY.get(leftVertex[0]).has(leftVertex[1])) {
+            noFinded.push(leftVertex);
+        }
+
+        const rightVertex = [];
+        rightVertex[0] = p2[0] - dY;
+        rightVertex[1] = p2[1] + dX;
+
+        if (!setByXY.has(rightVertex[0]) || !setByXY.get(rightVertex[0]).has(rightVertex[1])) {
+            noFinded.push(rightVertex);
+        }
+
+        const countNoFinded = noFinded.length;
+
+        if (result[countNoFinded] === undefined) {
+            result[countNoFinded] = noFinded;
+        }
+        return countNoFinded;
+    };
+
+    let noFinded;
+    let noFindedMin = 3;
+
+    for (let i = 0; i < coords.length && noFindedMin > 0; i++) {
+        for (let j = i + 1; j < coords.length && noFindedMin > 0; j++) {
+            noFinded = findVertex(coords[i], coords[j]);
+            noFindedMin = Math.min(noFindedMin, noFinded);
+            noFinded = findVertex(coords[j], coords[i]);
+            noFindedMin = Math.min(noFindedMin, noFinded);
+        }
+    }
+    return result[noFindedMin];
 }
 
 const _readline = require("readline");
