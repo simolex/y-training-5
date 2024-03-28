@@ -34,7 +34,7 @@
  */
 
 function report(width, leftText, rightText) {
-    const result = 0;
+    const getMinWidth = (text) => text.reduce((max, wordLength) => Math.max(max, wordLength), 0);
 
     const countLine = (widthColumn, text) => {
         let count = 0;
@@ -53,41 +53,29 @@ function report(width, leftText, rightText) {
         return count;
     };
 
-    for (let j = 1; j < width; j++) {
-        console.log(`l-${j}`, countLine(j, leftText));
-        console.log(`r-${width - j}`, countLine(width - j, rightText));
-    }
+    const leftSearch = (l, r) => {
+        while (l < r) {
+            const m = l + Math.floor((r - l) / 2);
+            if (
+                countLine(m, leftText) <= countLine(m + 1, leftText) &&
+                countLine(m + 1, leftText) <= countLine(width - m - 1, rightText)
+            ) {
+                r = m;
+            } else {
+                l = m + 1;
+            }
+        }
+        return l;
+    };
 
-    console.log(width, leftText, rightText);
-    // const n = troops.length;
+    const minWidthLeft = getMinWidth(leftText);
+    const minWidthRight = getMinWidth(rightText);
 
-    // let currentSum = 0n;
-    // const troopsSum = [currentSum];
-    // troops.forEach((v) => {
-    //     currentSum += v;
-    //     troopsSum.push(currentSum);
-    // });
-
-    // const rightSearch = (l, r, count, target) => {
-    //     while (l < r) {
-    //         const m = l + Math.floor((r - l) / 2);
-
-    //         if (troopsSum[m + count] - troopsSum[m] < target) {
-    //             l = m + 1;
-    //         } else {
-    //             r = m;
-    //         }
-    //     }
-    //     return l;
-    // };
-
-    // const result = recces.map((range) => {
-    //     const from = rightSearch(0, n - Number(range[0]), Number(range[0]), range[1]);
-    //     if (troopsSum[from + Number(range[0])] - troopsSum[from] === range[1]) {
-    //         return from + 1;
-    //     }
-    //     return -1n;
-    // });
+    const leftWidth = leftSearch(minWidthLeft, width - minWidthRight);
+    const result = Math.max(
+        countLine(leftWidth, leftText),
+        countLine(width - leftWidth, rightText)
+    );
 
     return result;
 }
@@ -95,7 +83,7 @@ function report(width, leftText, rightText) {
 const _readline = require("readline");
 
 const _reader = _readline.createInterface({
-    input: process.stdin
+    input: process.stdin,
 });
 
 const _inputLines = [];
