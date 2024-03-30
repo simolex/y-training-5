@@ -45,23 +45,35 @@ function election(party) {
     const bribes = [];
     const prefixParty = [0];
 
-    const isAvailableExpense = (expense) => {
-        const isAvailable = party.reduce((test, p, i) => {
-            const bribes = p[1];
-            if (bribes > 0) {
-                const upElectorate = prefixParty[i] - p[0] * i;
-                const avgVote = (upElectorate - 1) / (i + 1);
-                console.log();
+    // const isAvailableExpense = (expense) => {
+    //     const isAvailable = party.reduce((test, p, i) => {
+    //         const bribes = p[1];
+    //         if (bribes > 0) {
+    //             const upElectorate = prefixParty[i] - p[0] * i;
+    //             const avgVote = (upElectorate - 1) / (i + 1);
+    //             console.log();
+    //         }
+    //         return test;
+    //     }, false);
+    // };
+
+    const leftSearch = (l, r, fn, ...params) => {
+        while (l < r) {
+            const m = l + Math.floor((r - l) / 2);
+            if (fn(m, ...params)) {
+                r = m;
+            } else {
+                l = m + 1;
             }
-            return test;
-        }, false);
+        }
+        return l;
     };
 
-    const rightSearch = (l, r, count, target) => {
+    const rightSearch = (l, r, fn, ...params) => {
         while (l < r) {
             const m = l + Math.floor((r - l) / 2);
 
-            if (troopsSum[m + count] - troopsSum[m] < target) {
+            if (fn(m, ...params)) {
                 l = m + 1;
             } else {
                 r = m;
@@ -70,24 +82,135 @@ function election(party) {
         return l;
     };
 
-    party.sort((a, b) => b[0] - a[0]);
-    party.forEach((p, i) => prefixParty.push(prefixParty[i] + p[0]));
+    let maxVotes = -1;
+    let startIndex = -1;
 
-    for (let i = 0; i < n; i++) {
-        sortedParty.push(i);
-        bribes.push(i);
+    party.sort((a, b) => b[0] - a[0]);
+    party.forEach((p, i) => {
+        if (maxVotes < 0) {
+            maxVotes = p[0];
+        }
+        if (startIndex < 0 && p[1] > 0) {
+            startIndex = i;
+        }
+        prefixParty.push(prefixParty[i] + p[0]);
+    });
+    prefixParty.shift();
+
+    const getCompetitors = (restrictLevel) => {
+        l = 0;
+        r = n - 1;
+
+        while (l < r) {
+            const m = l + Math.ceil((r - l) / 2);
+            if (restrictLevel >= party[m][0]) {
+                r = m - 1;
+            } else {
+                l = m;
+            }
+        }
+        return l;
+
+        // while (l < r) {
+        //     const m = l + Math.ceil((r - l) / 2);
+
+        //     if (restrictLevel < party[m][0]) {
+        //         l = m + 1;
+        //     } else {
+        //         r = m;
+        //     }
+        // }
+        // return l;
+    };
+
+    const highPrecisionManipulation = (index) => {
+        let l = 0;
+        let r = maxVotes * 2; //10 ** 6;
+
+        // console.log("index", index);
+
+        while (l < r) {
+            const m = l + Math.ceil((r - l) / 2);
+            const indexCompetitor = getCompetitors(m);
+            const upVotes =
+                prefixParty[indexCompetitor] -
+                m * (indexCompetitor + 1) -
+                (indexCompetitor >= index ? party[index][0] : 0);
+            // console.log(`m: ${m}, indexCompetitor: ${indexCompetitor}, upVotes: ${upVotes} `);
+
+            if (m >= party[index][0] + upVotes) {
+                r = m - 1;
+            } else {
+                l = m;
+            }
+        }
+
+        const restrictLevel = l;
+        const i = getCompetitors(l);
+        const upVotes = prefixParty[i] - restrictLevel * (i + 1);
+        // console.log(
+        //     `${index}, restrictLevel: ${restrictLevel}, competitors: ${getCompetitors(l)},` +
+        //         ` upVotes: ${upVotes}, rest: ${upVotes + party[index][0] - restrictLevel - 2}, brick: ${
+        //             party[index][1]
+        //         } `
+        // );
+
+        return {
+            restrictLevel,
+            competitorsEdgeIndex: getCompetitors(l)
+        };
+    };
+
+    let good;
+    let rollback;
+    let maxMoney = -1;
+
+    // console.log(maxMoney, Math.max(1, startIndex));
+
+    for (let i = Math.max(1, startIndex); i < n; i++) {
+        const bribes = party[i][1];
+
+        if (bribes > 0) {
+            rollback = highPrecisionManipulation(i);
+            const j = rollback.competitorsEdgeIndex;
+            let upVotes = prefixParty[j] - rollback.restrictLevel * (j + 1);
+            const overVotes = upVotes + party[i][0] - rollback.restrictLevel - 2 - (j >= i ? party[i][0] : 0);
+            if (overVotes > 0) upVotes -= overVotes;
+
+            // console.log(
+            //     `${i}, restrictLevel: ${rollback.restrictLevel}, competitors: ${j},` +
+            //         ` upVotes: ${upVotes}, rest: ${overVotes}, brick: ${bribes} `
+            // );
+            if (maxMoney < 0 || maxMoney > upVotes + bribes) {
+                maxMoney = upVotes + bribes;
+                rollback.index = i;
+                rollback.upVotes = upVotes;
+                rollback.overVotes = overVotes;
+                good = rollback;
+            }
+        }
     }
 
-    sortedParty;
-    bribes.sort((a, b) => party[a][1] - party[b][1]);
+    let overVotes = good.overVotes;
 
-    return [0, 0, []];
+    for (let i = 0; i <= good.competitorsEdgeIndex; i++) {
+        if (i !== good.index) {
+            party[i][0] = good.restrictLevel;
+            if (good.overVotes > 0) {
+                ++party[i][0];
+                good.overVotes--;
+            }
+        }
+    }
+    party[good.index][0] += good.upVotes;
+
+    return [good.upVotes + party[good.index][1] - overVotes, good.index + 1, party.map((v) => v[0])];
 }
 
 const _readline = require("readline");
 
 const _reader = _readline.createInterface({
-    input: process.stdin,
+    input: process.stdin
 });
 
 const _inputLines = [];
