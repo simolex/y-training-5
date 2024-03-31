@@ -45,18 +45,6 @@ function election(party) {
     const bribes = [];
     const prefixParty = [0];
 
-    // const isAvailableExpense = (expense) => {
-    //     const isAvailable = party.reduce((test, p, i) => {
-    //         const bribes = p[1];
-    //         if (bribes > 0) {
-    //             const upElectorate = prefixParty[i] - p[0] * i;
-    //             const avgVote = (upElectorate - 1) / (i + 1);
-    //             console.log();
-    //         }
-    //         return test;
-    //     }, false);
-    // };
-
     const leftSearch = (l, r, fn, ...params) => {
         while (l < r) {
             const m = l + Math.floor((r - l) / 2);
@@ -84,6 +72,7 @@ function election(party) {
 
     let maxVotes = -1;
     let startIndex = -1;
+    party.forEach((v, i) => (v[2] = i));
 
     party.sort((a, b) => b[0] - a[0]);
     party.forEach((p, i) => {
@@ -135,7 +124,8 @@ function election(party) {
             const upVotes =
                 prefixParty[indexCompetitor] -
                 m * (indexCompetitor + 1) -
-                (indexCompetitor >= index ? party[index][0] : 0);
+                (indexCompetitor > index ? party[index][0] - m : 0);
+            // console.log(index, prefixParty[indexCompetitor] - m * (indexCompetitor + 1), l, r);
             // console.log(`m: ${m}, indexCompetitor: ${indexCompetitor}, upVotes: ${upVotes} `);
 
             if (m >= party[index][0] + upVotes) {
@@ -146,6 +136,7 @@ function election(party) {
         }
 
         const restrictLevel = l;
+        // console.log("restrictLevel", restrictLevel);
         const i = getCompetitors(l);
         const upVotes = prefixParty[i] - restrictLevel * (i + 1);
         // console.log(
@@ -161,37 +152,53 @@ function election(party) {
         };
     };
 
-    let good;
+    let good = {
+        restrictLevel: party[0][0],
+        competitorsEdgeIndex: 0,
+        index: 0,
+        upVotes: 0,
+        overVotes: 0
+    };
     let rollback;
     let maxMoney = -1;
 
     // console.log(maxMoney, Math.max(1, startIndex));
+    if (party.length > 1) {
+        for (let i = 0 /*Math.max(1, startIndex)*/; i < n; i++) {
+            const bribes = party[i][1];
 
-    for (let i = Math.max(1, startIndex); i < n; i++) {
-        const bribes = party[i][1];
+            if (bribes > 0) {
+                rollback = highPrecisionManipulation(i);
+                const j = rollback.competitorsEdgeIndex;
+                let upVotes =
+                    prefixParty[j] -
+                    rollback.restrictLevel * (j + 1) -
+                    (j >= i ? party[i][0] - rollback.restrictLevel : 0);
+                const overVotes =
+                    upVotes +
+                    party[i][0] -
+                    rollback.restrictLevel -
+                    2 -
+                    (j >= i ? party[i][0] - rollback.restrictLevel : 0);
+                if (overVotes > 0) upVotes -= overVotes;
 
-        if (bribes > 0) {
-            rollback = highPrecisionManipulation(i);
-            const j = rollback.competitorsEdgeIndex;
-            let upVotes = prefixParty[j] - rollback.restrictLevel * (j + 1);
-            const overVotes = upVotes + party[i][0] - rollback.restrictLevel - 2 - (j >= i ? party[i][0] : 0);
-            if (overVotes > 0) upVotes -= overVotes;
-
-            // console.log(
-            //     `${i}, restrictLevel: ${rollback.restrictLevel}, competitors: ${j},` +
-            //         ` upVotes: ${upVotes}, rest: ${overVotes}, brick: ${bribes} `
-            // );
-            if (maxMoney < 0 || maxMoney > upVotes + bribes) {
-                maxMoney = upVotes + bribes;
-                rollback.index = i;
-                rollback.upVotes = upVotes;
-                rollback.overVotes = overVotes;
-                good = rollback;
+                // console.log(
+                //     `${i}, restrictLevel: ${rollback.restrictLevel}, competitors: ${j},` +
+                //         ` upVotes: ${upVotes}, rest: ${overVotes}, brick: ${bribes} `
+                // );
+                if (maxMoney < 0 || maxMoney > upVotes + bribes) {
+                    maxMoney = upVotes + bribes;
+                    rollback.index = i;
+                    rollback.upVotes = upVotes;
+                    rollback.overVotes = overVotes;
+                    good = rollback;
+                }
             }
         }
     }
 
     let overVotes = good.overVotes;
+    // console.log(good);
 
     for (let i = 0; i <= good.competitorsEdgeIndex; i++) {
         if (i !== good.index) {
@@ -202,9 +209,13 @@ function election(party) {
             }
         }
     }
+    // console.log(party);
     party[good.index][0] += good.upVotes;
 
-    return [good.upVotes + party[good.index][1] - overVotes, good.index + 1, party.map((v) => v[0])];
+    const p1 = good.upVotes + party[good.index][1];
+    const p2 = party[good.index][2] + 1;
+
+    return [p1, p2, party.map((v) => v[0])];
 }
 
 const _readline = require("readline");
