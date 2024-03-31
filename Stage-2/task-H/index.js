@@ -20,10 +20,7 @@
 
 function frictionMatch(A, B) {
     const testAndRotate = (oneMatch) => {
-        if (
-            oneMatch[3] - oneMatch[1] < 0 ||
-            (oneMatch[3] - oneMatch[1] === 0 && oneMatch[2] - oneMatch[0] < 0)
-        ) {
+        if (oneMatch[3] - oneMatch[1] < 0 || (oneMatch[3] - oneMatch[1] === 0 && oneMatch[2] - oneMatch[0] < 0)) {
             return [oneMatch[2], oneMatch[3], oneMatch[0], oneMatch[1]];
         }
         return oneMatch;
@@ -46,13 +43,15 @@ function frictionMatch(A, B) {
                 let overlap = 0;
                 for (const [X, setByY] of mapAA.entries()) {
                     const newX = X - bashAA[i][0] + bashBB[j][0];
+
                     if (mapBB.has(newX)) {
+                        const byX = mapBB.get(newX);
                         for (const [Y, vectors] of setByY.entries()) {
                             const newY = Y - bashAA[i][1] + bashBB[j][1];
-
-                            if (mapBB.get(newX).has(newY)) {
+                            if (byX.has(newY)) {
+                                const byY = byX.get(newY);
                                 for (const vector of vectors.keys()) {
-                                    if (mapBB.get(newX).get(newY).has(vector)) {
+                                    if (byY.has(vector)) {
                                         overlap++;
                                     }
                                 }
@@ -95,33 +94,31 @@ function frictionMatch(A, B) {
 
     return (
         A.length -
-        (bashA.length < bashB.length
-            ? getOverlaps(bashA, bashB, mapA, mapB)
-            : getOverlaps(bashB, bashA, mapB, mapA))
+        (bashA.length < bashB.length ? getOverlaps(bashA, bashB, mapA, mapB) : getOverlaps(bashB, bashA, mapB, mapA))
     );
 }
 
 const _readline = require("readline");
-const { createReadStream } = require("fs");
-const highWaterMark = 64 * 1024;
-const input = createReadStream("input.txt", { encoding: "utf8", highWaterMark });
+// const { createReadStream } = require("fs");
+// const highWaterMark = 64 * 1024;
+// const input = createReadStream("input.txt", { encoding: "utf8", highWaterMark });
 let _inputLines = [];
 let _curLine = 0;
 
-input.on("data", (chunk) => {
-    _inputLines = chunk.toString().trim().split("\n");
-    solve();
+// input.on("data", (chunk) => {
+//     _inputLines = chunk.toString().trim().split("\n");
+//     solve();
+// });
+
+const _reader = _readline.createInterface({
+    input: process.stdin
 });
 
-// const _reader = _readline.createInterface({
-//     input: process.stdin,
-// });
+_reader.on("line", (line) => {
+    _inputLines.push(line);
+});
 
-// _reader.on("line", (line) => {
-//     _inputLines.push(line);
-// });
-
-// process.stdin.on("end", solve);
+process.stdin.on("end", solve);
 
 function solve() {
     const A = [];
