@@ -19,50 +19,49 @@
  */
 
 function frictionMatch(A, B) {
+    const mapShift = new Map();
+
     const testAndRotate = (oneMatch) => {
         if (oneMatch[3] - oneMatch[1] < 0 || (oneMatch[3] - oneMatch[1] === 0 && oneMatch[2] - oneMatch[0] < 0)) {
             return [oneMatch[2], oneMatch[3], oneMatch[0], oneMatch[1]];
         }
         return oneMatch;
     };
+    const addShift = (shift) => {
+        const shiftHash = JSON.stringify(shift);
+        if (!mapShift.has(shiftHash)) {
+            mapShift.set(shiftHash, { count: 0 });
+        }
 
-    const addMatch = (bash, x, y, vector) => {
-        if (!bash.has(x)) {
-            bash.set(x, new Map());
-        }
-        if (!bash.get(x).has(y)) {
-            bash.get(x).set(y, new Set());
-        }
-        bash.get(x).get(y).add(JSON.stringify(vector));
+        mapShift.get(shiftHash).count++;
     };
 
-    const getOverlaps = (bashAA, bashBB, mapAA, mapBB) => {
-        let max = 0;
-        for (let i = 0; i < bashAA.length; i++) {
-            for (let j = 0; j < bashBB.length; j++) {
-                let overlap = 0;
-                for (const [X, setByY] of mapAA.entries()) {
-                    const newX = X - bashAA[i][0] + bashBB[j][0];
+    const addMatch = (bash, x, y, vector) => {
+        const vectorHash = JSON.stringify(vector);
+        if (!bash.has(vectorHash)) {
+            bash.set(vectorHash, new Map());
+        }
+        if (!bash.get(vectorHash).has(y)) {
+            bash.get(vectorHash).set(y, new Set());
+        }
+        bash.get(vectorHash).get(y).add(x);
+    };
 
-                    if (mapBB.has(newX)) {
-                        const byX = mapBB.get(newX);
-                        for (const [Y, vectors] of setByY.entries()) {
-                            const newY = Y - bashAA[i][1] + bashBB[j][1];
-                            if (byX.has(newY)) {
-                                const byY = byX.get(newY);
-                                for (const vector of vectors.keys()) {
-                                    if (byY.has(vector)) {
-                                        overlap++;
-                                    }
-                                }
+    const getOverlaps = (mapAA, mapBB) => {
+        for (const [vector, aSetY] of mapAA.entries()) {
+            if (mapBB.has(vector)) {
+                const bSetY = mapBB.get(vector);
+                for (const [aY, aSetX] of aSetY.entries()) {
+                    for (const aX of aSetX.keys()) {
+                        for (const [bY, bSetX] of bSetY.entries()) {
+                            for (const bX of bSetX.keys()) {
+                                addShift([bX - aX, bY - aY]);
                             }
                         }
                     }
                 }
-                max = Math.max(max, overlap);
             }
         }
-        return max;
     };
 
     const mapA = new Map();
@@ -78,24 +77,16 @@ function frictionMatch(A, B) {
         addMatch(mapB, mm[0], mm[1], [mm[2] - mm[0], mm[3] - mm[1]]);
     });
 
-    const bashA = [];
-    for (const [X, setByY] of mapA.entries()) {
-        for (const Y of setByY.keys()) {
-            bashA.push([X, Y]);
+    getOverlaps(mapA, mapB);
+
+    let maxEqual = 0;
+    for (const equal of mapShift.values()) {
+        if (maxEqual < equal.count) {
+            maxEqual = equal.count;
         }
     }
 
-    const bashB = [];
-    for (const [X, setByY] of mapB.entries()) {
-        for (const Y of setByY.keys()) {
-            bashB.push([X, Y]);
-        }
-    }
-
-    return (
-        A.length -
-        (bashA.length < bashB.length ? getOverlaps(bashA, bashB, mapA, mapB) : getOverlaps(bashB, bashA, mapB, mapA))
-    );
+    return A.length - maxEqual;
 }
 
 const _readline = require("readline");
