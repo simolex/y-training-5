@@ -20,52 +20,24 @@
  * Формат вывода:
  * Выведите единственное целое число "— необходимое количество мячей.
  */
-// const event = {
-//     onPainting: 1,
-//     offPainting: 2,
-// };
 
-// function countPaintedTree(P, V, Q, M) {
-//     let treeCount = 0;
-//     const tasks = [];
-//     tasks.push({
-//         treeNum: P - V,
-//         eventTree: event.onPainting,
-//     });
-//     tasks.push({
-//         treeNum: P + V,
-//         eventTree: event.offPainting,
-//     });
-//     tasks.push({
-//         treeNum: Q - M,
-//         eventTree: event.onPainting,
-//     });
-//     tasks.push({
-//         treeNum: Q + M,
-//         eventTree: event.offPainting,
-//     });
+function calcGoals(homeGame1, guestGame1, guestGame2, homeGame2) {
+    const sum1 = homeGame1 + guestGame2;
+    const sum2 = guestGame1 + homeGame2;
 
-//     tasks.sort((a, b) => a.treeNum - b.treeNum || a.eventTree - b.eventTree);
-//     let painter = 1;
-//     let startNum = tasks[0].treeNum;
+    if (sum1 === sum2 && guestGame1 === guestGame2) {
+    }
+}
 
-//     for (let i = 1; i < tasks.length; i++) {
-//         if (tasks[i].eventTree === event.onPainting) {
-//             if (painter === 0) {
-//                 startNum = tasks[i].treeNum;
-//             }
-//             painter++;
-//         }
-//         if (tasks[i].eventTree === event.offPainting) {
-//             painter--;
-//             if (painter === 0) {
-//                 treeCount += tasks[i].treeNum - startNum + 1;
-//             }
-//         }
-//     }
+function needGoals(firstScore, secondScore, gamePlace) {
+    let [g1Game1, g2Game1] = firstScore.split(":").map((v) => Number(v));
+    let [g1Game2, g2Game2] = secondScore.split(":").map((v) => Number(v));
+    if (gamePlace === "1") {
+        return calcGoals(g1Game1, g2Game1, g1Game2, g2Game2);
+    }
 
-//     return treeCount;
-// }
+    return calcGoals(g2Game1, g1Game1, g2Game2, g1Game2);
+}
 
 const _readline = require("readline");
 
@@ -83,14 +55,10 @@ _reader.on("line", (line) => {
 process.stdin.on("end", solve);
 
 function solve() {
-    const firstLine = readArray();
-    const P = firstLine[0];
-    const V = firstLine[1];
-    const secondLine = readArray();
-    const Q = secondLine[0];
-    const M = secondLine[1];
+    const firstScore = readString();
+    const secondScore = readString();
 
-    const result = countPaintedTree(P, V, Q, M);
+    const result = needGoals(firstScore, secondScore, gamePlace);
     console.log(result);
 }
 
@@ -98,6 +66,12 @@ function readInt() {
     const n = Number(_inputLines[_curLine]);
     _curLine++;
     return n;
+}
+
+function readString() {
+    var str = _inputLines[_curLine].trim(" ");
+    _curLine++;
+    return str;
 }
 
 function readArray() {
@@ -118,4 +92,4 @@ function readEdges(n) {
     return grid;
 }
 
-module.exports = countPaintedTree;
+module.exports = needGoals;
