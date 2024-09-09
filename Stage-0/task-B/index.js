@@ -21,28 +21,29 @@
  * Выведите единственное целое число "— необходимое количество мячей.
  */
 
-function calcGoals(homeGame1, guestGame1, guestGame2, homeGame2) {
-    const sum1 = homeGame1 + guestGame2;
-    const sum2 = guestGame1 + homeGame2;
-
-    if (sum1 === sum2 && guestGame1 === guestGame2) {
-    }
-}
-
 function needGoals(firstScore, secondScore, gamePlace) {
     let [g1Game1, g2Game1] = firstScore.split(":").map((v) => Number(v));
     let [g1Game2, g2Game2] = secondScore.split(":").map((v) => Number(v));
-    if (gamePlace === "1") {
-        return calcGoals(g1Game1, g2Game1, g1Game2, g2Game2);
+
+    let countAddGoals = 0;
+
+    if (gamePlace === 1) {
+        const sumG1 = g1Game1 * 1000 + g1Game2 * 1001;
+        const sumG2 = g2Game1 * 1001 + g2Game2 * 1000;
+        countAddGoals = Math.max(countAddGoals, Math.floor((sumG2 - sumG1 + 1001) / 1001));
+    } else {
+        const sumG1 = g1Game1 * 1001 + g1Game2 * 1000;
+        const sumG2 = g2Game1 * 1000 + g2Game2 * 1001;
+        countAddGoals = Math.max(countAddGoals, Math.floor((sumG2 - sumG1 + 1000) / 1000));
     }
 
-    return calcGoals(g2Game1, g1Game1, g2Game2, g1Game2);
+    return countAddGoals;
 }
 
 const _readline = require("readline");
 
 const _reader = _readline.createInterface({
-    input: process.stdin,
+    input: process.stdin
 });
 
 const _inputLines = [];
@@ -57,6 +58,7 @@ process.stdin.on("end", solve);
 function solve() {
     const firstScore = readString();
     const secondScore = readString();
+    const gamePlace = readInt();
 
     const result = needGoals(firstScore, secondScore, gamePlace);
     console.log(result);
