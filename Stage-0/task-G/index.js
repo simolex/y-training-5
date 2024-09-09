@@ -8,55 +8,73 @@
  * Формат вывода:
 
  */
-
-function destroyBarracks(x, y, p) {
-    let result = 0;
+function strategyAttack(minLevelBarracks, x, y, p) {
+    let countSteps = 0;
     let countFoe = 0;
 
-    let fighter = x;
+    while (y >= minLevelBarracks) {
+        if (countFoe >= x) {
+            return Infinity;
+        }
 
-    do {
-        x -= countFoe;
-        countFoe += p;
+        y -= x - countFoe;
+
+        countFoe = 0;
+        if (y > 0) {
+            countFoe = p;
+        }
+
+        countSteps++;
+    }
+    while (y > 0) {
         if (x <= 0) {
-            return -1;
+            return Infinity;
         }
 
-        fighter = x;
-        if (fighter > 0 && y <= fighter / 2) {
-            const halfFighters = Math.floor(fighter / 2);
-            y -= halfFighters;
-            if (y < 0) {
-                fighter = fighter - halfFighters - y;
-            } else {
-                fighter = fighter - halfFighters;
-            }
+        if (y >= x) {
+            y -= x;
+        } else {
+            countFoe -= x - y;
+            y = 0;
         }
 
-        if (countFoe > 0 && fighter > 0) {
-            countFoe -= fighter;
-
-            if (countFoe < 0) {
-                fighter = -1 * countFoe;
-                countFoe = 0;
-            } else {
-                fighter = 0;
-            }
+        x -= countFoe;
+        if (y > 0) {
+            countFoe += p;
         }
-        if (fighter > 0 && y > 0) {
-            y -= fighter;
-        }
-        result++;
-        console.log(x, y, countFoe, fighter);
-    } while (x > 0 && y > 0);
 
-    return result;
+        countSteps++;
+    }
+
+    while (countFoe > 0) {
+        if (x <= 0) {
+            return Infinity;
+        }
+
+        countFoe -= x;
+        if (countFoe > 0) {
+            x -= countFoe;
+        }
+
+        countSteps++;
+    }
+    return countSteps;
+}
+
+function destroyBarracks(x, y, p) {
+    let result = Infinity;
+
+    for (let i = 0; i <= y; i++) {
+        result = Math.min(strategyAttack(i, x, y, p), result);
+    }
+
+    return result < Infinity ? result : -1;
 }
 
 const _readline = require("readline");
 
 const _reader = _readline.createInterface({
-    input: process.stdin
+    input: process.stdin,
 });
 
 const _inputLines = [];
