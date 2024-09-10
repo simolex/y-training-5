@@ -1,49 +1,88 @@
 /**
- * B. Футбольный комментатор
+ * D. Слоны и ладьи
  *
- * Раунд плей-офф между двумя командами состоит из двух матчей. Каждая команда проводит по одному
- * матчу «дома» и «в гостях». Выигрывает команда, забившая большее число мячей. Если же число
- * забитых мячей совпадает, выигрывает команда, забившая больше мячей «в гостях». Если и это число
- * мячей совпадает, матч переходит в дополнительный тайм или серию пенальти.
- * Вам дан счёт первого матча, а также счёт текущей игры (которая ещё не завершилась). Помогите
- * комментатору сообщить, сколько голов необходимо забить первой команде, чтобы победить, не переводя
- * игру в дополнительное время.
+ * На шахматной доске стоят слоны и ладьи, необходимо посчитать, сколько клеток не бьется ни одной из фигур.
+ * Шахматная доска имеет размеры 8 на 8. Ладья бьет все клетки горизонтали и вертикали, проходящих через клетку,
+ * где она стоит, до первой встретившейся фигуры. Слон бьет все клетки обеих диагоналей, проходящих через клетку,
+ * где он стоит, до первой встретившейся фигуры.
  *
  * Формат ввода:
- * В первой строке записан счёт первого мачта в формате G1:G2, где G1 — число мячей, забитых первой
- * командой, а G2 — число мячей, забитых второй командой.
- * Во второй строке записан счёт второго (текущего) матча в аналогичном формате. Все числа в записи
- * счёта не превышают 5.
- * В третьей строке записано число 1, если первую игру первая команда провела «дома», или 2,
- * если «в гостях».
+ * В первых восьми строках ввода описывается шахматная доска. Первые восемь символов каждой из этих строк описывают
+ * состояние соответствующей горизонтали: символ B (заглавная латинская буква) означает, что в клетке стоит слон,
+ * символ R — ладья, символ * — что клетка пуста. После описания горизонтали в строке могут идти пробелы, однако
+ * длина каждой строки не превышает 250 символов. После описания доски в файле могут быть пустые строки.
  *
  * Формат вывода:
- * Выведите единственное целое число "— необходимое количество мячей.
+ * Выведите количество пустых клеток, которые не бьются ни одной из фигур.
  */
 
-function needGoals(firstScore, secondScore, gamePlace) {
-    let [g1Game1, g2Game1] = firstScore.split(":").map((v) => Number(v));
-    let [g1Game2, g2Game2] = secondScore.split(":").map((v) => Number(v));
+function whereEmpty(chessBoard) {
+    // const allDirections = ["XAxis", "YAxis", "LeftDiag", "RightDiag"];
+    const pieces = {
+        R: [
+            { i: -1, j: 0 },
+            { i: 0, j: 1 },
+            { i: 1, j: 0 },
+            { i: 0, j: -1 },
+        ],
+        B: [
+            { i: -1, j: -1 },
+            { i: -1, j: 1 },
+            { i: 1, j: 1 },
+            { i: 1, j: -1 },
+        ],
+    };
 
-    let countAddGoals = 0;
+    const fields = [];
+    fields.push(Array(10).fill(" "));
+    chessBoard.forEach((str) => {
+        const row = Array(1).fill(" ").concat(str.split(""));
+        row.push(" ");
+        fields.push(row);
+    });
+    fields.push(Array(10).fill(" "));
 
-    if (gamePlace === 1) {
-        const sumG1 = g1Game1 * 1000 + g1Game2 * 1001;
-        const sumG2 = g2Game1 * 1001 + g2Game2 * 1000;
-        countAddGoals = Math.max(countAddGoals, Math.floor((sumG2 - sumG1 + 1001) / 1001));
-    } else {
-        const sumG1 = g1Game1 * 1001 + g1Game2 * 1000;
-        const sumG2 = g2Game1 * 1000 + g2Game2 * 1001;
-        countAddGoals = Math.max(countAddGoals, Math.floor((sumG2 - sumG1 + 1000) / 1000));
+    let dI, dJ;
+    let canStep;
+    for (let i = 1; i <= 8; i++) {
+        for (let j = 1; j <= 8; j++) {
+            const directions = pieces[fields[i][j]];
+
+            if (directions) {
+                directions.forEach((delta) => {
+                    canStep = true;
+                    for (let k = 1; k < 8 && canStep; k++) {
+                        dI = i + k * delta.i;
+                        dJ = j + k * delta.j;
+
+                        if (["*", "#"].includes(fields[dI][dJ])) {
+                            fields[dI][dJ] = "#";
+                        } else {
+                            canStep = false;
+                            continue;
+                        }
+                    }
+                });
+            }
+        }
     }
 
-    return countAddGoals;
+    let result = 0;
+    for (let i = 1; i <= 8; i++) {
+        for (let j = 1; j <= 8; j++) {
+            if (fields[i][j] === "*") {
+                result++;
+            }
+        }
+    }
+
+    return result;
 }
 
 const _readline = require("readline");
 
 const _reader = _readline.createInterface({
-    input: process.stdin
+    input: process.stdin,
 });
 
 const _inputLines = [];
@@ -56,11 +95,13 @@ _reader.on("line", (line) => {
 process.stdin.on("end", solve);
 
 function solve() {
-    const firstScore = readString();
-    const secondScore = readString();
-    const gamePlace = readInt();
+    const chessBoard = [];
 
-    const result = needGoals(firstScore, secondScore, gamePlace);
+    for (let i = 0; i < 8; i++) {
+        chessBoard.push(readString());
+    }
+
+    const result = whereEmpty(chessBoard);
     console.log(result);
 }
 
@@ -94,4 +135,4 @@ function readEdges(n) {
     return grid;
 }
 
-module.exports = needGoals;
+module.exports = whereEmpty;
